@@ -33,17 +33,16 @@ class Calendar(metaclass=SingletonMeta):
                 del self.events[day]
 
     def display_month(self):
-        """Displays the calendar for the month."""
-        cal = calendar.TextCalendar(calendar.SUNDAY)
-        month_str = cal.formatmonth(self.year, self.month)
-        print(month_str)
+        cal = calendar.HTMLCalendar(calendar.SUNDAY)
+        return cal.formatmonth(self.year, self.month)
 
     def display_events(self):
-        """Displays all the events in the calendar."""
+        events_html = ""
         for day in sorted(self.events.keys()):
-            print(f"Day {day}:")
+            events_html += f"<h3>Day {day}:</h3>"
             for event in self.events[day]:
-                print(f"  - {event}")
+                events_html += f"<p>- {event}</p>"
+        return events_html
 
     def get_events(self, day):
         """Returns all events on a specific day."""
