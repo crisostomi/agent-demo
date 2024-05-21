@@ -17,8 +17,12 @@ pip install -e .
 
 Create files `key.txt` and `tavili_key.txt` in the home directory of the project. Insert your OpenAI key in the first and your Tavily key in the second.
 
+## Usage
+
 Run the server
 
 ```
 python server.py
 ```
+
+Try sending requests to the server from `notebooks/requests_playground.ipynb`
