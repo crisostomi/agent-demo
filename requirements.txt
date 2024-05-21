@@ -10,3 +10,4 @@ hydra-core
 autoflake
 music21
 omegaconf
+langchain-community

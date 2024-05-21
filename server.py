@@ -13,7 +13,7 @@ import atexit
 
 import omegaconf
 
-from agent import PROJECT_ROOT
+from agent import PROJECT_ROOT, OPENAI_API_KEY
 import logging
 import hydra
 import os
@@ -36,7 +36,7 @@ def run(cfg: omegaconf.DictConfig):
     )
 
     tools = [
-        None
+        print_tool()
     ]
 
     agent = create_openai_functions_agent(llm, tools, agent_prompt)
@@ -67,7 +67,7 @@ def run(cfg: omegaconf.DictConfig):
         prompt = data["text"]
 
         pylogger.info("Received prompt from user interface.")
-        log_prompt(prompt)
+        # log_prompt(prompt)
 
         agent_with_chat_history.invoke(
             input={"input": prompt},
@@ -75,8 +75,6 @@ def run(cfg: omegaconf.DictConfig):
         )
 
         formatted_time = datetime.now().strftime("%d %b %y %H.%M")
-        save_txt(prompt, f"{cfg.paths.generations}/{formatted_time}.txt")
-
         return (
             jsonify({"status": "success", "message": "Text received successfully"}),
             200,
