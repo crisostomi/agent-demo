@@ -1,0 +1,9 @@
+defaults:
+  - hydra: default
+
+# possible model ids: "gpt-3.5-turbo", "gpt-4", "gpt-4o"
+
+main_agent:
+  temperature: 0.0
+  model_id: "gpt-3.5-turbo"
+  timeout_ms: 20000

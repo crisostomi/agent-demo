@@ -1,0 +1,12 @@
+langchain
+langchain-openai
+langchainhub
+mido
+flask
+flask-cors
+git-python
+rich
+hydra-core
+autoflake
+music21
+omegaconf
