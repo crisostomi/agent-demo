@@ -1,32 +1,34 @@
-from agent.status.calendar import Calendar
+from agent.status.calendar import Calendar, CurrentCalendar
 from langchain.tools import BaseTool, StructuredTool, tool
+from flask import Flask, request, render_template_string, redirect, url_for
 
 @tool 
-def add_appointment_to_calendar(date, event):
+def add_event_to_calendar(day, event):
     """
-    Adds an appointment to the calendar with provided date, time and description.
+    Adds an event to the calendar with provided day of the month (from 1 to 31) and description.
     """
-    calendar = Calendar()
-    calendar.add_event(date, event)
+    calendar = CurrentCalendar().get_calendar()
+    calendar.add_event(day, event)
 
-    return f"Added appointment for {date} with description: {event}"
+    return f"Added appointment for {day} with description: {event}"
 
 @tool
-def remove_appointment_from_calendar(date, event):
+def remove_event_from_calendar(day, event):
     """
-    Removes an appointment from the calendar with provided date.
+    Removes an appointment from the calendar with provided day of the month (from 1 to 31).
     """
-    calendar = Calendar()
-    calendar.remove_event(date, event)
+    calendar = CurrentCalendar().get_calendar()
 
-    return f"Removed event {event} for {date} "
+    calendar.remove_event(day, event)
+
+    return f"Removed event {event} for {day} "
 
 @tool 
 def list_all_events():
     """
     Lists all events in the calendar.
     """
-    calendar = Calendar()
+    calendar = CurrentCalendar().get_calendar()
     return calendar.display_events()
 
 

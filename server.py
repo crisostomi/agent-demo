@@ -1,8 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 from agent.status.config import Config
-from agent.status.calendar import Calendar
-from agent.tools.calendar_tools import add_appointment_to_calendar, list_all_events, remove_appointment_from_calendar
+from agent.status.calendar import Calendar, CurrentCalendar
+from agent.tools.calendar_tools import add_event_to_calendar, list_all_events, remove_event_from_calendar
 from langchain_openai import ChatOpenAI
 from langchain import hub
 from langchain.agents import create_openai_functions_agent, AgentExecutor
@@ -10,6 +10,7 @@ from langchain.memory import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from langchain_community.tools.tavily_search import TavilySearchResults
 from flask import Flask, request, render_template_string
+from flask import Flask, request, render_template_string, redirect, url_for
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -24,7 +25,6 @@ import os
 pylogger = logging.getLogger(__name__)
 
 
-
 def run(cfg: omegaconf.DictConfig):
 
     Config.set_instance(cfg)
@@ -32,6 +32,7 @@ def run(cfg: omegaconf.DictConfig):
     agent_prompt = hub.pull("hwchase17/openai-functions-agent")
 
     calendar = Calendar(2024, 5)
+    CurrentCalendar().set_calendar(calendar)
 
     llm = ChatOpenAI(
         model=cfg.main_agent.model_id,
@@ -43,8 +44,8 @@ def run(cfg: omegaconf.DictConfig):
     search = TavilySearchResults()
 
     tools = [
-        add_appointment_to_calendar,
-        remove_appointment_from_calendar,
+        add_event_to_calendar,
+        remove_event_from_calendar,
         search,
         list_all_events
     ]
@@ -68,10 +69,11 @@ def run(cfg: omegaconf.DictConfig):
     app = Flask(__name__)
     CORS(app)
 
+        
     @app.route('/')
     def index():
-        cal = Calendar(2024, 5)
-        month_html = cal.display_month()
+        month_html = calendar.display_month()
+        month_html_with_events = add_events(month_html)
         return render_template_string('''
             <html>
                 <head>
@@ -87,10 +89,10 @@ def run(cfg: omegaconf.DictConfig):
                 </head>
                 <body>
                     <h1>Calendar for May 2024</h1>
-                    <div>{{ month_html | safe }}</div>
+                    <div>{{ month_html | add_events | safe }}</div>
                     <h2>Add Event</h2>
                     <div class="form-container">
-                        <form method="post" action="/add_event">
+                        <form method="post" action="{{ url_for('add_event') }}">
                             <label for="day">Day:</label>
                             <input type="number" id="day" name="day" required min="1" max="31">
                             <label for="event">Event:</label>
@@ -98,22 +100,57 @@ def run(cfg: omegaconf.DictConfig):
                             <button type="submit">Add Event</button>
                         </form>
                     </div>
+                    <h2>Submit Text</h2>
+                    <div class="form-container">
+                        <form id="textForm">
+                            <label for="text">Text:</label>
+                            <textarea id="text" name="text" required></textarea>
+                            <button type="button" onclick="submitText()">Submit Text</button>
+                        </form>
+                    </div>
+                    <script>
+                        function submitText() {
+                            const text = document.getElementById('text').value;
+                            fetch('/submit-text', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify({text: text})
+                            })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Network response was not ok');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                if (data.status === 'success') {
+                                    alert('Text submitted successfully');
+                                } else {
+                                    alert('Error submitting text');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('There was a problem with your fetch operation:', error);
+                            });
+                        }
+                    </script>
                 </body>
             </html>
-        ''', month_html=month_html)
+        ''', month_html=month_html_with_events)    
 
     @app.route('/add_event', methods=['POST'])
     def add_event():
         day = int(request.form['day'])
         event = request.form['event']
-        cal = Calendar(2024, 5)
-        cal.add_event(day, event)
-        return index()
+        calendar.add_event(day, event) 
+
+        return redirect(url_for('index'))
     
     @app.context_processor
     def inject_events():
-        cal = Calendar(2024, 5)
-        events = {day: cal.get_events(day) for day in range(1, 32)}
+        events = {day: calendar.get_events(day) for day in range(1, 32)}
         return {'events': events}
 
     @app.template_filter('add_events')
@@ -132,29 +169,22 @@ def run(cfg: omegaconf.DictConfig):
         return str(soup)
 
 
-    @app.route("/submit-text", methods=["POST"])
+    @app.route('/submit-text', methods=['POST'])
     def submit_text():
-
         data = request.json
         prompt = data["text"]
-
         pylogger.info("Received prompt from user interface.")
-
+        # Assuming agent_with_chat_history is correctly defined and available
         agent_with_chat_history.invoke(
             input={"input": prompt},
             config={"configurable": {"session_id": "<foo>"}},
         )
-
         formatted_time = datetime.now().strftime("%d %b %y %H.%M")
-        return (
-            jsonify({"status": "success", "message": "Text received successfully"}),
-            200,
-        )
-    
+        return redirect(url_for('index'))
+
     app.run(host="0.0.0.0", port=5000)
     
     atexit.register(cleanup)
-
 
 
 def cleanup():

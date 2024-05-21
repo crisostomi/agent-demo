@@ -1,25 +1,13 @@
 import calendar
 from datetime import datetime
 
-class SingletonMeta(type):
-    """
-    A Singleton metaclass. Ensures only one instance of the class exists.
-    """
-    _instances = {}
 
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            instance = super().__call__(*args, **kwargs)
-            cls._instances[cls] = instance
-        return cls._instances[cls]
-
-class Calendar(metaclass=SingletonMeta):
-    def __init__(self, year, month):
+class Calendar:
+    def __init__(self, year=None, month=None):
         self.year = year
         self.month = month
-        self.events = {}  # Dictionary to hold events
+        self.events = {}
 
-        
     def add_event(self, day, event):
         if day not in self.events:
             self.events[day] = []
@@ -37,3 +25,22 @@ class Calendar(metaclass=SingletonMeta):
 
     def get_events(self, day):
         return self.events.get(day, [])
+
+class CurrentCalendar:
+    _instance = None
+
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super(CurrentCalendar, cls).__new__(cls)
+            
+        return cls._instance
+    
+    def set_calendar(self, calendar: Calendar):
+
+        self._instance.calendar = calendar
+
+    def get_calendar(self):
+        return self._instance.calendar
+
+    def __bool__(self):
+        return self._instance is not None
