@@ -53,7 +53,7 @@ def run(cfg: omegaconf.DictConfig):
         lambda session_id: memory, 
         input_messages_key="input",
         history_messages_key="chat_history"
-)
+    )
 
     app = Flask(__name__)
     CORS(app)
@@ -67,7 +67,6 @@ def run(cfg: omegaconf.DictConfig):
         prompt = data["text"]
 
         pylogger.info("Received prompt from user interface.")
-        # log_prompt(prompt)
 
         agent_with_chat_history.invoke(
             input={"input": prompt},
