@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 from agent.status.config import Config
+from agent.tools.calendar_tools import add_appointment_to_calendar
 from langchain_openai import ChatOpenAI
 from langchain import hub
 from langchain.agents import create_openai_functions_agent, AgentExecutor
@@ -10,7 +11,6 @@ from langchain_core.runnables.history import RunnableWithMessageHistory
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import atexit
-
 import omegaconf
 
 from agent import PROJECT_ROOT, OPENAI_API_KEY
@@ -21,10 +21,10 @@ import os
 pylogger = logging.getLogger(__name__)
 
 
+
 def run(cfg: omegaconf.DictConfig):
 
     Config.set_instance(cfg)
-
 
     agent_prompt = hub.pull("hwchase17/openai-functions-agent")
 
@@ -36,7 +36,7 @@ def run(cfg: omegaconf.DictConfig):
     )
 
     tools = [
-        print_tool()
+        add_appointment_to_calendar,
     ]
 
     agent = create_openai_functions_agent(llm, tools, agent_prompt)
@@ -79,6 +79,9 @@ def run(cfg: omegaconf.DictConfig):
             jsonify({"status": "success", "message": "Text received successfully"}),
             200,
         )
+    
+    app.run(host="0.0.0.0", port=5000)
+
 
 
 def cleanup():
