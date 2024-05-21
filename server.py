@@ -68,33 +68,39 @@ def run(cfg: omegaconf.DictConfig):
     app = Flask(__name__)
     CORS(app)
 
-
-    @app.route('/')
-    def index():
-        cal = Calendar(2024, 5)
-        month_html = cal.display_month()
-        events_html = cal.display_events()
-        return render_template_string('''
+@app.route('/')
+def index():
+    cal = Calendar(2024, 5)
+    month_html = cal.display_month()
+    return render_template_string('''
         <html>
             <head>
                 <title>Calendar</title>
+                <style>
+                    body { font-family: Arial, sans-serif; }
+                    table { width: 100%; border-collapse: collapse; }
+                    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+                    th { background-color: #f2f2f2; }
+                    .events { margin-top: 10px; font-size: 0.9em; color: #555; }
+                    .form-container { margin-top: 20px; }
+                </style>
             </head>
             <body>
                 <h1>Calendar for May 2024</h1>
                 <div>{{ month_html | safe }}</div>
-                <h2>Events</h2>
-                <div>{{ events_html | safe }}</div>
                 <h2>Add Event</h2>
-                <form method="post" action="/add_event">
-                    <label for="day">Day:</label>
-                    <input type="number" id="day" name="day" required>
-                    <label for="event">Event:</label>
-                    <input type="text" id="event" name="event" required>
-                    <button type="submit">Add Event</button>
-                </form>
+                <div class="form-container">
+                    <form method="post" action="/add_event">
+                        <label for="day">Day:</label>
+                        <input type="number" id="day" name="day" required min="1" max="31">
+                        <label for="event">Event:</label>
+                        <input type="text" id="event" name="event" required>
+                        <button type="submit">Add Event</button>
+                    </form>
+                </div>
             </body>
         </html>
-    ''', month_html=month_html, events_html=events_html)
+    ''', month_html=month_html)
 
     @app.route('/add_event', methods=['POST'])
     def add_event():
@@ -146,3 +152,19 @@ def main(cfg: omegaconf.DictConfig):
 
 if __name__ == "__main__":
     main()
+
+
+
+# c1, c2, c3
+# CLIP:
+# embed c1, c2, c3 -> f_{CLIP}(c1), f_{CLIP}(c2), f_{CLIP}(c3)
+# x -> embed(x) -> compare x with z1, z2, z3 -> similarities a1, a2, a3
+# x: img di un cane che corre sul prato
+# c1: "un prato verde2
+# c2: "la luna in fiamme"
+# c3: "la rivoluzione industriale in inghilterra"
+# a1: 0.7, 0.05, 0.001
+# GPT
+# embed c1, c2, c3 -> f_{GPT}(c1), f_{GPT}(c2), f_{GPT}(c3)
+# f_{GPT}(x) \approx a1 * f_{GPT}(z1) + a2 * f_{GPT}(z2) + a3 * f_{GPT}(z3)
+# f_{GPT}(x) = 0.7 * f_{GPT}("un prato verde") + 0.05 * f_{GPT}("la luna in fiamme") + 0.001 * f_{GPT}("la rivoluzione industriale in inghilterra")

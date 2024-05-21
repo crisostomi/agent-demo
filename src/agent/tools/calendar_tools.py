@@ -28,3 +28,5 @@ def list_all_events():
     """
     calendar = Calendar()
     return calendar.display_events()
+
+
