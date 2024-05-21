@@ -5,6 +5,8 @@ from pathlib import Path
 import git
 from rich.logging import RichHandler
 
+
+
 FORMAT = "%(message)s"
 formatted_time = datetime.now().strftime("%d %b %y %H.%M")
 
@@ -33,3 +35,7 @@ except git.exc.InvalidGitRepositoryError:
 os.environ["PROJECT_ROOT"] = str(PROJECT_ROOT)
 
 OPENAI_API_KEY = open(f"{PROJECT_ROOT}/key.txt", "r").read().strip()
+TAVILI_API_KEY = open(f"{PROJECT_ROOT}/tavili_key.txt", "r").read().strip()
+
+os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["TAVILY_API_KEY"] = TAVILI_API_KEY

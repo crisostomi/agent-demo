@@ -1,22 +1,30 @@
+from agent.status.calendar import Calendar
 from langchain.tools import BaseTool, StructuredTool, tool
 
 @tool 
-def add_appointment_to_calendar(date, time, description):
+def add_appointment_to_calendar(date, event):
     """
     Adds an appointment to the calendar with provided date, time and description.
     """
-    # TODO: implement calendar logic 
-    # calendar = get_calendar()
-    # calendar.add_appointment(date, time, description)
+    calendar = Calendar()
+    calendar.add_event(date, event)
 
-    return f"Added appointment for {date} at {time} with description: {description}"
+    return f"Added appointment for {date} with description: {event}"
 
-
-def remove_appointment_from_calendar(date, time):
+@tool
+def remove_appointment_from_calendar(date, event):
     """
-    Removes an appointment from the calendar with provided date and time.
+    Removes an appointment from the calendar with provided date.
     """
-    # TODO: implement calendar logic
-    # calendar = get_calendar()
-    # calendar.remove_appointment(date, time)
-    return f"Removed appointment for {date} at {time}"
+    calendar = Calendar()
+    calendar.remove_event(date, event)
+
+    return f"Removed event {event} for {date} "
+
+@tool 
+def list_all_events():
+    """
+    Lists all events in the calendar.
+    """
+    calendar = Calendar()
+    return calendar.display_events()

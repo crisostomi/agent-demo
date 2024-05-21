@@ -1,7 +1,8 @@
 from datetime import datetime
 from pathlib import Path
 from agent.status.config import Config
-from agent.tools.calendar_tools import add_appointment_to_calendar, remove_appointment_from_calendar
+from agent.status.calendar import Calendar
+from agent.tools.calendar_tools import add_appointment_to_calendar, list_all_events, remove_appointment_from_calendar
 from langchain_openai import ChatOpenAI
 from langchain import hub
 from langchain.agents import create_openai_functions_agent, AgentExecutor
@@ -14,7 +15,7 @@ from flask_cors import CORS
 import atexit
 import omegaconf
 
-from agent import PROJECT_ROOT, OPENAI_API_KEY
+from agent import PROJECT_ROOT, OPENAI_API_KEY, TAVILI_API_KEY
 import logging
 import hydra
 import os
@@ -29,6 +30,8 @@ def run(cfg: omegaconf.DictConfig):
 
     agent_prompt = hub.pull("hwchase17/openai-functions-agent")
 
+    calendar = Calendar(2024, 5)
+
     llm = ChatOpenAI(
         model=cfg.main_agent.model_id,
         temperature=cfg.main_agent.temperature,
@@ -41,7 +44,8 @@ def run(cfg: omegaconf.DictConfig):
     tools = [
         add_appointment_to_calendar,
         remove_appointment_from_calendar,
-        search
+        search,
+        list_all_events
     ]
 
     agent = create_openai_functions_agent(llm, tools, agent_prompt)
