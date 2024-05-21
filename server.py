@@ -1,12 +1,13 @@
 from datetime import datetime
 from pathlib import Path
 from agent.status.config import Config
-from agent.tools.calendar_tools import add_appointment_to_calendar
+from agent.tools.calendar_tools import add_appointment_to_calendar, remove_appointment_from_calendar
 from langchain_openai import ChatOpenAI
 from langchain import hub
 from langchain.agents import create_openai_functions_agent, AgentExecutor
 from langchain.memory import ChatMessageHistory
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from langchain_community.tools.tavily_search import TavilySearchResults
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -35,8 +36,12 @@ def run(cfg: omegaconf.DictConfig):
         timeout=cfg.main_agent.timeout_ms,
     )
 
+    search = TavilySearchResults()
+
     tools = [
         add_appointment_to_calendar,
+        remove_appointment_from_calendar,
+        search
     ]
 
     agent = create_openai_functions_agent(llm, tools, agent_prompt)
